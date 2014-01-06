@@ -1,0 +1,32 @@
+# person_view.enaml
+from enaml.widgets.api import (Window, Form, Label, Field, WebView, Container,
+                               PushButton)
+from enaml.layout.api import hbox
+
+from PyQt4.QtWebKit import QWebPage
+
+enamldef SyncNetView(Window):
+    attr model
+    title = 'SyncNet'
+
+    Container:
+        Container: navbar:
+            constraints = [hbox(back, forward, reload, address)]
+            PushButton: back:
+                text = '<-'
+                clicked :: webview.proxy.widget.back()
+            PushButton: forward:
+                text = '->'
+                clicked :: webview.proxy.widget.forward()
+            PushButton: reload:
+                text = 'rl'
+                clicked ::
+                    webview.proxy.widget.reload()
+            Field: address:
+                text := model.entered_secret
+        WebView: webview:
+            activated ::
+                widget = webview.proxy.widget
+                widget.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+                widget.linkClicked.connect(model.on_link_clicked)
+            url << model.html_path.toString()
