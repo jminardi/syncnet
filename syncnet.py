@@ -23,7 +23,8 @@ class SyncNet(Atom):
     # Instance of the BTSync API wrapper.
     btsync = Typed(BTSync, ())
 
-    # The QUrl object referencing the currently displayed resource.
+    # The QUrl object referencing the currently displayed resource. It must be
+    # replaced wholesale for the UI to react.
     # FIXME remove this QT dependency.
     html_path = Typed(QUrl, ())
 
