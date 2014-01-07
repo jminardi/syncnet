@@ -12,5 +12,6 @@ Requirements
 
 Future Work
 -----------
-* Build a DNS system using colored coins
+* Build a DNS system using colored coins.
 * Selectivly sync only the content requested.
+* Convert any regular HTTP site into a syncnet site.
