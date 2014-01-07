@@ -1,9 +1,12 @@
 import os
+import threading
+import SimpleHTTPServer
+import SocketServer
 
 import enaml
 from enaml.qt.qt_application import QtApplication
-from PyQt4.QtCore import QFileSystemWatcher, QUrl
-from atom.api import Atom, Unicode, observe, Typed, Property
+from PyQt4.QtCore import QFileSystemWatcher
+from atom.api import Atom, Unicode, observe, Typed, Property, Int
 
 from btsync import BTSync
 
@@ -15,7 +18,10 @@ STORAGE_PATH = u'/Users/jack/Desktop/synced_secrets'
 class SyncNet(Atom):
 
     # The text currently entered in the secret field.
-    entered_secret = Unicode()
+    address = Unicode()
+
+    # The currently loaded secret.
+    current_secret = Unicode()
 
     # A list of all locally synced secrets.
     known_secrets = Property()
@@ -25,8 +31,7 @@ class SyncNet(Atom):
 
     # The QUrl object referencing the currently displayed resource. It must be
     # replaced wholesale for the UI to react.
-    # FIXME remove this QT dependency.
-    html_path = Typed(QUrl, ())
+    html_path = Unicode()
 
     # Root path where all synced site directoryies are added.
     storage_path = Unicode(STORAGE_PATH)
@@ -34,6 +39,12 @@ class SyncNet(Atom):
     # The filesystem watcher that monitors all currently synced site
     # directories.
     _watcher = Typed(QFileSystemWatcher)
+
+    # This thread runs the simple http server.
+    _server_thread = Typed(threading.Thread)
+
+    # The simple http server's port
+    http_port = Int()
 
     ### Public Interface  #####################################################
 
@@ -72,6 +83,7 @@ class SyncNet(Atom):
         RuntimeError if `secret` is invalid
 
         """
+        secret = secret.upper()
         if not self.is_valid_secret(secret):
             msg = 'Attempted to load invalid secret: {}'.format(secret)
             raise RuntimeError(msg)
@@ -79,22 +91,28 @@ class SyncNet(Atom):
         if secret not in self.known_secrets:
             self.init_secret(secret)
 
-        path = os.path.join(self.storage_path, secret)
-        path = os.path.join(path, 'index.html')
-        self.html_path = QUrl(path)
+        self.current_secret = secret
+
+        print '>>', self._server_thread
+        url = 'http://localhost:{}/{}'.format(self.http_port, secret)
+        print 'inside load_secret, url is:', url
+        #self.html_path = QUrl('')
+        self.html_path = url
 
     def is_valid_secret(self, secret):
         """ True if the given `secret` is a valid btsync secret string.
         """
+        if '/' in secret:
+            return False
         return 'error' not in self.btsync.get_secrets(secret)
 
     ### Observers  ############################################################
 
-    @observe('entered_secret')
+    @observe('address')
     def _secret_changed(self, change):
         """ Load the entered secret into the HTML View if it is valid.
         """
-        secret = self.entered_secret.upper()
+        secret = self.address
         if self.is_valid_secret(secret):
             self.load_secret(secret)
 
@@ -104,13 +122,20 @@ class SyncNet(Atom):
         # If the directory containing the currently loaded secret changes, it
         # is reloaded.
         _, secret = os.path.split(os.path.normpath(dirname))
-        if secret == self.entered_secret:
+        if secret == self.current_secret:
             self.load_secret(secret)
 
     def on_link_clicked(self, link):
         """ Slot connected to the `QWebView.linkClicked` Signal.
         """
-        print link.toString()
+        print 'inside on_link_clicked:', link.toString()
+        if link.host() == 'localhost':
+            self.address = link.path()[1:]
+        elif link.scheme == 'sync':
+            self.address = link.host().upper()
+        else:
+            self.address = link.toString()
+
         if link.scheme() == 'sync':
             secret = link.host().upper()
             if self.is_valid_secret(secret):
@@ -118,7 +143,7 @@ class SyncNet(Atom):
             else:
                 print 'failed to load: {}'.format(link.toString())
         else:
-            self.html_path = link
+            self.html_path = link.toString()
 
     ### Default methods  ######################################################
 
@@ -126,6 +151,18 @@ class SyncNet(Atom):
         _watcher = QFileSystemWatcher()
         _watcher.directoryChanged.connect(self.on_directory_changed)
         return _watcher
+
+    def _default__server_thread(self):
+        os.chdir(self.storage_path)
+        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        httpd = SocketServer.TCPServer(('localhost', 0), handler)
+        _, port = httpd.server_address
+        self.http_port = port
+
+        t = threading.Thread(target=httpd.serve_forever)
+        t.setDaemon(True)  # don't hang on exit
+        t.start()
+        return t
 
     ### Property getters  #####################################################
 
@@ -137,7 +174,7 @@ class SyncNet(Atom):
 
 if __name__ == '__main__':
     with enaml.imports():
-        from sync_net_view import SyncNetView
+        from syncnet_view import SyncNetView
     syncnet = SyncNet()
     app = QtApplication()
     view = SyncNetView(model=syncnet)
