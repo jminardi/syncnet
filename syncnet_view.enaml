@@ -35,4 +35,5 @@ enamldef SyncNetView(Window):
                 widget = webview.proxy.widget
                 widget.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
                 widget.linkClicked.connect(model.on_link_clicked)
-            url << model.html_path
+                widget.urlChanged.connect(model.on_url_changed)
+            url << model.url

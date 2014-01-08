@@ -31,7 +31,7 @@ class SyncNet(Atom):
 
     # The QUrl object referencing the currently displayed resource. It must be
     # replaced wholesale for the UI to react.
-    html_path = Unicode()
+    url = Unicode()
 
     # Root path where all synced site directoryies are added.
     storage_path = Unicode(STORAGE_PATH)
@@ -91,30 +91,45 @@ class SyncNet(Atom):
         if secret not in self.known_secrets:
             self.init_secret(secret)
 
+        # Store the currently loaded secret so its directory can be monitored.
         self.current_secret = secret
 
-        print '>>', self._server_thread
+        # Ensure the HTTP server is running before the url is set.
+        if self._server_thread is None:
+            self._server_thread = self._create_server_thread()
+
         url = 'http://localhost:{}/{}'.format(self.http_port, secret)
-        print 'inside load_secret, url is:', url
-        #self.html_path = QUrl('')
-        self.html_path = url
+        self.url = ''  # FIXME hack to get the webview to reload
+        self.url = url
 
     def is_valid_secret(self, secret):
-        """ True if the given `secret` is a valid btsync secret string.
+        """ True if the given `secret` is a valid btsync secret string. A
+        valid secret is a 160 bit base32 encoded string with an 'A' prepended.
+
         """
-        if '/' in secret:
+        if not secret.startswith('A'):
             return False
-        return 'error' not in self.btsync.get_secrets(secret)
+        if len(secret) != 33:
+            return False
+        if not secret.isupper():
+            return False
+        # ensure only legal chars as defined by RFC 4648
+        for char in ('1', '8', '9', '='):
+            if char in secret:
+                return False
+        return True
 
     ### Observers  ############################################################
 
     @observe('address')
-    def _secret_changed(self, change):
-        """ Load the entered secret into the HTML View if it is valid.
+    def _address_changed(self, change):
+        """ Check the text entered into the address field to see if it contains
+        a valid secret. If so, attempt to load that secret.
+
         """
-        secret = self.address
-        if self.is_valid_secret(secret):
-            self.load_secret(secret)
+        address = self.address.upper()
+        if self.is_valid_secret(address):
+            self.load_secret(address)
 
     def on_directory_changed(self, dirname):
         """ Slot connected to the `QFileSystemWatcher.directoryChanged` Signal.
@@ -125,25 +140,24 @@ class SyncNet(Atom):
         if secret == self.current_secret:
             self.load_secret(secret)
 
-    def on_link_clicked(self, link):
+    def on_link_clicked(self, url):
         """ Slot connected to the `QWebView.linkClicked` Signal.
         """
-        print 'inside on_link_clicked:', link.toString()
-        if link.host() == 'localhost':
-            self.address = link.path()[1:]
-        elif link.scheme == 'sync':
-            self.address = link.host().upper()
-        else:
-            self.address = link.toString()
+        self._update_address_bar(url)
 
-        if link.scheme() == 'sync':
-            secret = link.host().upper()
+        if url.scheme() == 'sync':
+            secret = url.host().upper()
             if self.is_valid_secret(secret):
                 self.load_secret(secret)
             else:
-                print 'failed to load: {}'.format(link.toString())
+                print 'failed to load: {}'.format(url.toString())
         else:
-            self.html_path = link.toString()
+            self.url = url.toString()
+
+    def on_url_changed(self, url):
+        """ Slot connected to the `QWebView.urlChanged` Signal.
+        """
+        self._update_address_bar(url)
 
     ### Default methods  ######################################################
 
@@ -152,7 +166,16 @@ class SyncNet(Atom):
         _watcher.directoryChanged.connect(self.on_directory_changed)
         return _watcher
 
-    def _default__server_thread(self):
+    ### Property getters  #####################################################
+
+    def _get_known_secrets(self):
+        """ List of all locally synced secrets. Getter for known_secrets.
+        """
+        return os.listdir(self.storage_path)
+
+    ### Private Interface  ####################################################
+
+    def _create_server_thread(self):
         os.chdir(self.storage_path)
         handler = SimpleHTTPServer.SimpleHTTPRequestHandler
         httpd = SocketServer.TCPServer(('localhost', 0), handler)
@@ -164,12 +187,20 @@ class SyncNet(Atom):
         t.start()
         return t
 
-    ### Property getters  #####################################################
-
-    def _get_known_secrets(self):
-        """ List of all locally synced secrets. Getter for known_secrets.
+    def _update_address_bar(self, url):
         """
-        return os.listdir(self.storage_path)
+        Parameters
+        ----------
+        url : QUrl
+            The currently displayed url
+
+        """
+        if url.host() == 'localhost':
+            self.address = url.path()[1:]
+        elif url.scheme() == 'sync':
+            self.address = url.host().upper()
+        else:
+            self.address = url.toString()
 
 
 if __name__ == '__main__':
