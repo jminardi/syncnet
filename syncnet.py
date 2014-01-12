@@ -10,9 +10,13 @@ from atom.api import Atom, Unicode, observe, Typed, Property, Int
 
 from btsync import BTSync
 
+import logging
+
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
 STORAGE_PATH = u'/Users/jack/Desktop/synced_secrets'
+
+logger = logging.getLogger(__name__)
 
 
 class SyncNet(Atom):
@@ -34,7 +38,7 @@ class SyncNet(Atom):
     url = Unicode()
 
     # Root path where all synced site directoryies are added.
-    storage_path = Unicode(STORAGE_PATH)
+    storage_path = Unicode()
 
     # The filesystem watcher that monitors all currently synced site
     # directories.
@@ -102,6 +106,13 @@ class SyncNet(Atom):
         self.url = ''  # FIXME hack to get the webview to reload
         self.url = url
 
+    def new_site(self):
+        model = NewSiteModel()
+        with enaml.imports():
+            from syncnet_view import NewSiteDialog
+        dialog = NewSiteDialog(model=model)
+        dialog.show()
+
     def is_valid_secret(self, secret):
         """ True if the given `secret` is a valid btsync secret string. A
         valid secret is a 160 bit base32 encoded string with an 'A' prepended.
@@ -166,6 +177,13 @@ class SyncNet(Atom):
         _watcher.directoryChanged.connect(self.on_directory_changed)
         return _watcher
 
+    def _storage_path_default(self):
+        storage_path = STORAGE_PATH
+        if not os.path.exists(storage_path):
+            os.makedirs(storage_path)
+            logger.debug('Creating storage path: {}'.format(storage_path))
+        return storage_path
+
     ### Property getters  #####################################################
 
     def _get_known_secrets(self):
@@ -181,9 +199,10 @@ class SyncNet(Atom):
         httpd = SocketServer.TCPServer(('localhost', 0), handler)
         _, port = httpd.server_address
         self.http_port = port
+        print port
 
         t = threading.Thread(target=httpd.serve_forever)
-        t.setDaemon(True)  # don't hang on exit
+        t.daemon = True  # don't hang on exit
         t.start()
         return t
 
@@ -201,6 +220,23 @@ class SyncNet(Atom):
             self.address = url.host().upper()
         else:
             self.address = url.toString()
+
+
+class NewSiteModel(Atom):
+
+    seed = Unicode()
+    secret = Unicode()
+    ro_secret = Unicode()
+
+    def on_ok_clicked(self):
+        print 'OKCLICKED'
+
+    def on_cancel_clicked(self):
+        print 'CANCELCLICKED'
+
+    @observe('seed')
+    def _seed_changed(self, changed):
+        print self.seed
 
 
 if __name__ == '__main__':
