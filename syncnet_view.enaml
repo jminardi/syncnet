@@ -1,16 +1,19 @@
 # person_view.enaml
-from enaml.widgets.api import (Window, Form, Label, Field, WebView, Container,
+from enaml.widgets.api import (Window, Field, WebView, Container,
                                PushButton)
-from enaml.layout.api import hbox, vbox, align
+from enaml.layout.api import hbox, vbox, align, spacer
 
 from PyQt4.QtWebKit import QWebPage
+from new_site_controller import NewSiteController
+from new_site_dialog import NewSiteDialog
 
 enamldef SyncNetView(Window):
     attr model
     title = 'SyncNet'
 
-    Container:
+    Container: main:
         padding = (0, 0, 0, 0)
+        constraints = [vbox(navbar, webview)]
         Container: navbar:
             padding = (10, 4, 0, 4)
             constraints = [
@@ -31,7 +34,10 @@ enamldef SyncNetView(Window):
                 text := model.address
             PushButton: newsite:
                 text = '+'
-                clicked :: model.new_site()
+                clicked ::
+                    controller = NewSiteController(syncnet=model)
+                    dialog = NewSiteDialog(controller=controller)
+                    dialog.show()
 
         WebView: webview:
             activated ::
@@ -40,41 +46,3 @@ enamldef SyncNetView(Window):
                 widget.linkClicked.connect(model.on_link_clicked)
                 widget.urlChanged.connect(model.on_url_changed)
             url << model.url
-
-
-enamldef NewSiteDialog(Window): dialog:
-    attr model
-    title = 'Create New SyncSite'
-    modality = 'application_modal'
-
-    Container:
-        Form:
-            Label:
-                text = 'Seed:'
-            Field:
-                text := model.seed
-            Label:
-                text = 'Secret:'
-            Field:
-                text := model.secret
-            Label:
-                text = 'Read Only:'
-            Field:
-                text := model.ro_secret
-                enabled = False
-            PushButton:
-                text = 'Generate'
-            Container:
-                constraints = [hbox(ok, cancel),
-                               align('v_center', ok, cancel),
-                               ]
-                PushButton: ok:
-                    text = 'Ok'
-                    clicked ::
-                        model.on_ok_clicked()
-                        dialog.close()
-                PushButton: cancel:
-                    text = 'Cancel'
-                    clicked ::
-                        model.on_cancel_clicked()
-                        dialog.close()
