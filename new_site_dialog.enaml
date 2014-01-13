@@ -1,0 +1,53 @@
+from enaml.widgets.api import Window, Form, Label, Container, Field, PushButton
+from enaml.styling import StyleSheet, Style, Setter
+from enaml.layout.api import hbox, vbox, align, spacer
+
+
+enamldef NewSiteDialog(Window): dialog:
+    attr controller
+    title = 'Create New SyncSite'
+    modality = 'application_modal'
+    initial_size = (400, 1)
+
+    StyleSheet:
+        Style:
+            element = 'Field'
+            style_class = 'error'
+            Setter:
+                field = 'background'
+                value = '#F5B0B0'
+
+    Container:
+        Form:
+            padding = 0
+            Label:
+                text = 'Seed:'
+            Field:
+                submit_triggers = ['auto_sync']
+                text := controller.seed
+            Label:
+                text = 'Secret:'
+            Field:
+                submit_triggers = ['auto_sync']
+                text := controller.secret
+                style_class << ('' if controller.ro_secret or not text
+                                else 'error')
+            Label:
+                text = 'Read Only:'
+            Field:
+                text := controller.ro_secret
+                read_only = True
+            Label: blank:
+                pass
+            Container:
+                constraints = [hbox(spacer, ok, cancel),
+                               align('v_center', ok, cancel),
+                               ]
+                PushButton: ok:
+                    text = 'Ok'
+                    clicked ::
+                        controller.on_ok_clicked()
+                        dialog.close()
+                PushButton: cancel:
+                    text = 'Cancel'
+                    clicked :: dialog.close()
