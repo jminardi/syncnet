@@ -1,14 +1,15 @@
-syncnet
+SyncNet
 =======
 
-syncnet is a decentralized browser built on top of Bittorrent Sync and (soon) Colored Coins.
+SyncNet is a decentralized browser built on top of BitTorrent Sync and (soon) Colored Coins.
+
+You can find more detail on my [website](http://jack.minardi.org/software/syncnet-a-decentralized-web-browser/).
 
 Requirements
 ------------
-* enaml
-* atom
-* QT
-* python-btsync
+* [enaml](https://github.com/nucleic/enaml) - enaml is used as the UI framework
+* [atom](https://github.com/nucleic/atom) - atom is used as the eventing framework
+* [python-btsync](https://github.com/jminardi/python-btsync) - a lightweight wrapper around the BTSync API
 
 Future Work
 -----------
