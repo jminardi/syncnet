@@ -5,6 +5,8 @@ SyncNet is a decentralized browser built on top of BitTorrent Sync and (soon) Co
 
 You can find more detail on my [website](http://jack.minardi.org/software/syncnet-a-decentralized-web-browser/).
 
+SyncNet is experimental, no security auditing has been done. Only use it if you know what you are doing.
+
 Requirements
 ------------
 * [enaml](https://github.com/nucleic/enaml) - enaml is used as the UI framework
