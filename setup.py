@@ -11,10 +11,12 @@ requires = [
         'python-bitcoinlib',
         'atom',
         'enaml',
+        'BTSync',
     ]
 
 dependency_links=[
     "https://github.com/petertodd/python-bitcoinlib/archive/pythonize.zip#egg=python-bitcoinlib",
+    "https://github.com/ademan/python-btsync/archive/packaging.zip#egg=BTSync",
     ]
 
 setup(name='syncnet',
