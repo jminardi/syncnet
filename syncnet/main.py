@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
-STORAGE_PATH = u'~/.syncnet/synced_secrets'
+STORAGE_PATH = u'/Users/jack/Desktop/synced_secrets'
 
 
 class SyncNet(Atom):
@@ -73,6 +73,7 @@ class SyncNet(Atom):
         os.mkdir(path)
         self._watcher.addPath(path)
         self.btsync.add_folder(path, secret)
+        logger.debug('Directory added to BTSync: {}'.format(path))
 
     def load_secret(self, secret):
         """ Display the HTML files referenced by the given secret in the View.
@@ -101,11 +102,13 @@ class SyncNet(Atom):
 
         # Ensure the HTTP server is running before the url is set.
         if self._server_thread is None:
+            logger.debug('Creating server thread')
             self._server_thread = self._create_server_thread()
 
         url = 'http://localhost:{}/{}'.format(self.http_port, secret)
         self.url = ''  # FIXME hack to get the webview to reload
         self.url = url
+        logger.debug('URL set to: {}'.format(url))
 
     def is_valid_secret(self, secret):
         """ True if the given `secret` is a valid btsync secret string. A
