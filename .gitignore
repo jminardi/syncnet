@@ -1,4 +1,5 @@
 *.py[cod]
+.ropeproject
 
 # C extensions
 *.so
