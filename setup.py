@@ -8,14 +8,12 @@ with open(os.path.join(here, 'README.md')) as f:
     README = f.read()
 
 requires = [
-        'python-bitcoinlib',
         'atom',
         'enaml',
         'BTSync',
     ]
 
 dependency_links=[
-    "https://github.com/petertodd/python-bitcoinlib/archive/pythonize.zip#egg=python-bitcoinlib",
     "https://github.com/ademan/python-btsync/archive/packaging.zip#egg=BTSync",
     ]
 
@@ -27,7 +25,9 @@ setup(name='syncnet',
       "Programming Language :: Python",
       ],
     packages=find_packages(),
-    include_package_data=True,
+    package_data={
+        'syncnet': ['*.enaml'],
+    },
     install_requires=requires,
     dependency_links=dependency_links,
     )
