@@ -1,4 +1,4 @@
-pyinstaller --name=SyncNet \
+pyinstaller --name=Syncnet --icon=syncnet512.icns \
 --runtime-hook rthook_pyqt4.py --clean --noconfirm --windowed \
 --hidden-import="enaml.core.parse_tab.lextab" \
 --hidden-import="enaml.core.compiler_helpers" \
@@ -15,8 +15,9 @@ cp syncnet/syncnet_view.enaml \
    syncnet/new_site_controller.py \
    dist/SyncNet.app/Contents/MacOS/
 
-mv dist/SyncNet.app .
+rm -rf Syncnet.app
+mv dist/Syncnet.app .
 
-rm SyncNet.spec
+rm Syncnet.spec
 rm -rf dist
 rm -rf build

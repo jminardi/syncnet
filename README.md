@@ -29,3 +29,5 @@ Future Work
 * Build a DNS system using colored coins.
 * Selectivly sync only the content requested.
 * Convert any regular HTTP site into a syncnet site.
+
+Logo from wikipedia: http://commons.wikimedia.org/wiki/File:Social_Network_Analysis_Visualization.png
