@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
-STORAGE_PATH = u'/Users/jack/Desktop/synced_secrets'
+STORAGE_PATH = os.path.expanduser(u'~/Documents/SyncNet/synced_secrets')
 
 
 class SyncNet(Atom):
@@ -225,6 +225,7 @@ if __name__ == '__main__':
     with enaml.imports():
         from syncnet_view import SyncNetView
     syncnet = SyncNet()
+    syncnet.btsync.start()
     app = QtApplication()
     view = SyncNetView(model=syncnet)
     view.show()
