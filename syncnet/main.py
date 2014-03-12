@@ -1,4 +1,5 @@
 import os
+import sys
 import threading
 import SimpleHTTPServer
 import SocketServer
@@ -17,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
-STORAGE_PATH = os.path.expanduser(u'~/Documents/SyncNet/synced_secrets')
+STORAGE_PATH = os.path.expanduser(u'~/Documents/Syncnet/synced_secrets')
 
 
 class SyncNet(Atom):
@@ -225,6 +226,11 @@ if __name__ == '__main__':
     with enaml.imports():
         from syncnet_view import SyncNetView
     syncnet = SyncNet()
+    if getattr(sys, 'frozen', False):
+        HERE = os.path.dirname(sys.executable)
+        btsync_path = os.path.join(
+            HERE, 'BitTorrent\ Sync.app/Contents/MacOS/BitTorrent\ Sync')
+        syncnet.btsync.btsync_path = btsync_path
     syncnet.btsync.start()
     app = QtApplication()
     view = SyncNetView(model=syncnet)
