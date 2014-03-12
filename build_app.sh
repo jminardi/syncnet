@@ -15,6 +15,8 @@ cp syncnet/syncnet_view.enaml \
    syncnet/new_site_controller.py \
    dist/SyncNet.app/Contents/MacOS/
 
+cp -r /Applications/BitTorrent\ Sync.app dist/SyncNet.app/Contents/MacOS/
+
 rm -rf Syncnet.app
 mv dist/Syncnet.app .
 
