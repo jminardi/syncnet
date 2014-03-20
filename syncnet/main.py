@@ -3,6 +3,7 @@ import sys
 import threading
 import SimpleHTTPServer
 import SocketServer
+import shutil
 
 import enaml
 from enaml.qt.qt_application import QtApplication
@@ -71,6 +72,7 @@ class SyncNet(Atom):
 
         """
         path = os.path.join(self.storage_path, secret)
+        shutil.rmtree(path) #if path to secret somehow already existed
         os.mkdir(path)
         self._watcher.addPath(path)
         self.btsync.add_folder(path, secret)
@@ -189,7 +191,11 @@ class SyncNet(Atom):
     def _get_known_secrets(self):
         """ List of all locally synced secrets. Getter for known_secrets.
         """
-        return os.listdir(self.storage_path)
+        directories = os.listdir(self.storage_path)
+        secrets = [ x['secret'] for x in self.btsync.get_folders()]
+        tracked_directories = filter((lambda x:x in secrets), directories)
+        return tracked_directories
+
 
     ### Private Interface  ####################################################
 
