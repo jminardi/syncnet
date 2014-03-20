@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
-STORAGE_PATH = os.path.expanduser(u'~/Documents/Syncnet/synced_secrets')
+STORAGE_PATH = os.path.join(os.path.expanduser('~'), os.path.join('Documents','Syncnet','synced_secrets') )
 
 
 class SyncNet(Atom):
