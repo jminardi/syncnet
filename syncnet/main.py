@@ -72,7 +72,7 @@ class SyncNet(Atom):
 
         """
         path = os.path.join(self.storage_path, secret)
-        shutil.rmtree(path) #if path to secret somehow already existed
+        shutil.rmtree(path, ignore_errors=True) #rmtree only if old path exists so mkdir culd work
         os.mkdir(path)
         self._watcher.addPath(path)
         self.btsync.add_folder(path, secret)
