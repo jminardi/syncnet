@@ -19,7 +19,10 @@ logger.setLevel(logging.DEBUG)
 
 # Directory where all synced sites will be stored. Each site will be synced to
 # a directory whose name is the secret.
-STORAGE_PATH = os.path.join(os.path.expanduser('~'), os.path.join('Documents','Syncnet','synced_secrets') )
+STORAGE_PATH = os.path.join(
+    os.path.expanduser('~'),
+    os.path.join('Documents','Syncnet','synced_secrets')
+)
 
 
 class SyncNet(Atom):
@@ -40,7 +43,7 @@ class SyncNet(Atom):
     # replaced wholesale for the UI to react.
     url = Unicode()
 
-    # Root path where all synced site directoryies are added.
+    # Root path where all synced site directories are added.
     storage_path = Unicode()
 
     # The filesystem watcher that monitors all currently synced site
@@ -72,8 +75,11 @@ class SyncNet(Atom):
 
         """
         path = os.path.join(self.storage_path, secret)
-        shutil.rmtree(path, ignore_errors=True) #rmtree only if old path exists so mkdir culd work
-        os.mkdir(path)
+        if not os.path.exists(path):
+            os.mkdir(path)
+        else:
+            msg = 'init_secret called with existing secret: {}'.format(path)
+            logger.debug(msg)
         self._watcher.addPath(path)
         self.btsync.add_folder(path, secret)
         logger.debug('Directory added to BTSync: {}'.format(path))
@@ -192,7 +198,7 @@ class SyncNet(Atom):
         """ List of all locally synced secrets. Getter for known_secrets.
         """
         directories = os.listdir(self.storage_path)
-        secrets = [ x['secret'] for x in self.btsync.get_folders()]
+        secrets = [x['secret'] for x in self.btsync.get_folders()]
         tracked_directories = filter((lambda x:x in secrets), directories)
         return tracked_directories
 
